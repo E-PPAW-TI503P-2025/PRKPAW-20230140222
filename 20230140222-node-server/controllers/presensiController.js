@@ -3,6 +3,36 @@ const { Presensi } = require("../models");
 const { format } = require("date-fns-tz");
 const timeZone = "Asia/Jakarta";
 
+// ======================= GET ALL PRESENSI =======================
+exports.getAllPresensi = async (req, res) => {
+  try {
+    const presensiRecords = await Presensi.findAll({
+      order: [['createdAt', 'DESC']],
+    });
+
+    const formattedData = presensiRecords.map(record => ({
+      id: record.id,
+      userId: record.userId,
+      nama: record.nama,
+      checkIn: record.checkIn ? format(record.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }) : null,
+      checkOut: record.checkOut ? format(record.checkOut, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }) : null,
+      createdAt: format(record.createdAt, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
+      updatedAt: format(record.updatedAt, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
+    }));
+
+    res.json({
+      message: "Data presensi berhasil diambil",
+      data: formattedData,
+    });
+  } catch (error) {
+    console.error("Error getAllPresensi:", error);
+    res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};
+
 // ======================= CHECK-IN =======================
 exports.CheckIn = async (req, res) => {
   try {
