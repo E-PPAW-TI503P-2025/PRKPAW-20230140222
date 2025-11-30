@@ -7,13 +7,21 @@ const timeZone = "Asia/Jakarta";
 exports.getAllPresensi = async (req, res) => {
   try {
     const presensiRecords = await Presensi.findAll({
+      include: [{
+        model: require('../models').User,
+        as: 'user',
+        attributes: ['nama', 'email']
+      }],
       order: [['createdAt', 'DESC']],
     });
 
     const formattedData = presensiRecords.map(record => ({
       id: record.id,
       userId: record.userId,
-      nama: record.nama,
+      user: {
+        nama: record.user?.nama || 'N/A',
+        email: record.user?.email || 'N/A'
+      },
       checkIn: record.checkIn ? format(record.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }) : null,
       checkOut: record.checkOut ? format(record.checkOut, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }) : null,
       createdAt: format(record.createdAt, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
@@ -38,6 +46,7 @@ exports.CheckIn = async (req, res) => {
   try {
     const { id: userId, nama: userName } = req.user;
     const waktuSekarang = new Date();
+    const { latitude, longitude } = req.body; // Ambil data lokasi dari body request
 
     // Cek apakah user sudah check-in dan belum check-out
     const existingRecord = await Presensi.findOne({
@@ -55,6 +64,8 @@ exports.CheckIn = async (req, res) => {
       userId,
       nama: userName,
       checkIn: waktuSekarang,
+      latitude: latitude,
+      longitude: longitude,
     });
 
     const formattedData = {
@@ -85,6 +96,7 @@ exports.CheckOut = async (req, res) => {
   try {
     const { id: userId, nama: userName } = req.user;
     const waktuSekarang = new Date();
+    const { latitude, longitude } = req.body; // Ambil data lokasi dari body request
 
     // Cari data check-in aktif user
     const recordToUpdate = await Presensi.findOne({
@@ -97,8 +109,10 @@ exports.CheckOut = async (req, res) => {
       });
     }
 
-    // Update check-out
+    // Update check-out dan lokasi jika disediakan
     recordToUpdate.checkOut = waktuSekarang;
+    if (latitude !== undefined) recordToUpdate.latitude = latitude;
+    if (longitude !== undefined) recordToUpdate.longitude = longitude;
     await recordToUpdate.save();
 
     const formattedData = {

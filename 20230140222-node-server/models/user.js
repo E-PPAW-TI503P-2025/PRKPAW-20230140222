@@ -4,6 +4,12 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
+    static associate(models) {
+    User.hasMany(models.Presensi, { 
+    foreignKey: 'userId', 
+    as: 'presensi' 
+  });
+}
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
