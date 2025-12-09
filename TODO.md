@@ -1,5 +1,0 @@
-- [x] Add React state for modal: `isModalOpen` and `selectedImage`
-- [x] Update table header to include "Bukti Foto" column
-- [x] Update table body to add new cell for thumbnail image
-- [x] Add modal component for full-size image display
-- [x] Test thumbnails and modal functionality
