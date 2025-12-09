@@ -2,6 +2,58 @@
 const { Presensi } = require("../models");
 const { format } = require("date-fns-tz");
 const timeZone = "Asia/Jakarta";
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); 
+  },
+  filename: (req, file, cb) => {
+    // Format nama file: userId-timestamp.jpg
+    cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+  }
+};
+
+exports.upload = multer({ storage: storage, fileFilter: fileFilter });
+
+// ======================= CHECK ACTIVE CHECK-IN =======================
+exports.checkActiveCheckIn = async (req, res) => {
+  try {
+    const { id: userId } = req.user;
+
+    const activeRecord = await Presensi.findOne({
+      where: { userId, checkOut: null },
+    });
+
+    if (activeRecord) {
+      res.json({
+        message: "Anda sedang dalam status check-in aktif.",
+        isActive: true,
+        checkInTime: format(activeRecord.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
+      });
+    } else {
+      res.json({
+        message: "Anda tidak sedang dalam status check-in aktif.",
+        isActive: false,
+      });
+    }
+  } catch (error) {
+    console.error("Error checkActiveCheckIn:", error);
+    res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};
 
 // ======================= GET ALL PRESENSI =======================
 exports.getAllPresensi = async (req, res) => {
@@ -48,6 +100,8 @@ exports.CheckIn = async (req, res) => {
     const waktuSekarang = new Date();
     const { latitude, longitude } = req.body; // Ambil data lokasi dari body request
 
+    const buktiFoto = req.file ? req.file.path.replace(/\\/g, '/') : null;
+
     // Cek apakah user sudah check-in dan belum check-out
     const existingRecord = await Presensi.findOne({
       where: { userId, checkOut: null },
@@ -66,6 +120,7 @@ exports.CheckIn = async (req, res) => {
       checkIn: waktuSekarang,
       latitude: latitude,
       longitude: longitude,
+      buktiFoto: buktiFoto
     });
 
     const formattedData = {

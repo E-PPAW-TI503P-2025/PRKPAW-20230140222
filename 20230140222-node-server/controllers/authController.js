@@ -54,19 +54,36 @@ exports.login = async (req, res) => {
     const payload = {
       id: user.id,
       nama: user.nama,
-      role: user.role 
+      role: user.role
     };
 
     const token = jwt.sign(payload, JWT_SECRET, {
-      expiresIn: '1h' 
+      expiresIn: '1h'
     });
 
     res.json({
       message: "Login berhasil",
-      token: token 
+      token: token
     });
 
   } catch (error) {
     res.status(500).json({ message: "Terjadi kesalahan pada server", error: error.message });
   }
+};
+
+exports.authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token tidak ditemukan' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Token tidak valid' });
+    }
+    req.user = user;
+    next();
+  });
 };
