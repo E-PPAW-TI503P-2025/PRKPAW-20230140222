@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -9,8 +9,10 @@ function ReportsPage() {
   const [error, setError] = useState(null);
   const [searchNama, setSearchNama] = useState('');
   const [searchTanggal, setSearchTanggal] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
 
-  const fetchReports = async (nama = '', tanggal = '') => {
+  const fetchReports = useCallback(async (nama = '', tanggal = '') => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -37,11 +39,11 @@ function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchReports();
-  }, [navigate]);
+  }, []);
 
   const handleSearch = () => {
     fetchReports(searchNama, searchTanggal);
@@ -122,6 +124,7 @@ function ReportsPage() {
                     <th className="px-4 py-2 text-left">Check-In</th>
                     <th className="px-4 py-2 text-left">Check-Out</th>
                     <th className="px-4 py-2 text-left">Created At</th>
+                    <th className="px-4 py-2 text-left">Bukti Foto</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -138,6 +141,21 @@ function ReportsPage() {
                       <td className="px-4 py-2">
                         {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'N/A'}
                       </td>
+                      <td className="px-4 py-2">
+                        {item.buktiFoto ? (
+                          <img
+                            src={`http://localhost:3001/${item.buktiFoto.replace(/\\/g, '/')}`}
+                            alt="Bukti Foto"
+                            className="w-16 h-16 object-cover cursor-pointer border rounded"
+                            onClick={() => {
+                              setSelectedImage(`http://localhost:3001/${item.buktiFoto.replace(/\\/g, '/')}`);
+                              setIsModalOpen(true);
+                            }}
+                          />
+                        ) : (
+                          'Tidak ada foto'
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -145,6 +163,31 @@ function ReportsPage() {
             </div>
           )}
         </div>
+
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Bukti Foto Presensi</h3>
+              </div>
+              <div className="flex justify-center">
+                <img
+                  src={selectedImage}
+                  alt="Full Size Bukti Foto"
+                  className="max-w-full max-h-[70vh] object-contain rounded"
+                />
+              </div>
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

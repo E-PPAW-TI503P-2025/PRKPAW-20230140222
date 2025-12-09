@@ -1,13 +1,24 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const presensiController = require('../controllers/presensiController');
-const { addUserData } = require('../middleware/permissionMiddleware');
-router.use(addUserData);
-router.get("/", presensiController.getAllPresensi);
-router.post("/check-in", presensiController.CheckIn);
-router.post("/check-out", presensiController.CheckOut);
+const multer = require("multer");
+const path = require("path");
+const { checkIn, checkOut } = require("../controllers/presensiController");
 
-router.put("/:id", presensiController.updatePresensi);
-router.delete("/:id", presensiController.deletePresensi);
+// Konfigurasi multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../uploads"));
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now();
+    cb(null, `${req.body.userId}-${unique}${path.extname(file.originalname)}`);
+  },
+});
+
+const upload = multer({ storage });
+
+// Routes
+router.post("/checkin", upload.single("buktiFoto"), checkIn);
+router.post("/checkout", checkOut);
 
 module.exports = router;
