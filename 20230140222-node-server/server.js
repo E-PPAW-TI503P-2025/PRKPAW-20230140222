@@ -10,10 +10,14 @@ const presensiRoutes = require("./routes/presensi");
 const reportRoutes = require("./routes/reports");
 const authRoutes = require("./routes/auth");
 
+const iotRoutes = require("./routes/iot");
+
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
+app.use("/api/iot", iotRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
