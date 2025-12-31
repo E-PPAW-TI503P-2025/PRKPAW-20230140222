@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const { checkIn, checkOut } = require("../controllers/presensiController");
+const { CheckIn, CheckOut } = require("../controllers/presensiController");
 
 // Konfigurasi multer
 const storage = multer.diskStorage({
@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Routes
-router.post("/checkin", upload.single("buktiFoto"), checkIn);
-router.post("/checkout", checkOut);
+router.post("/checkin", upload.single("buktiFoto"), CheckIn);
+router.post("/checkout", CheckOut);
 
 module.exports = router;
